@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+        
+{% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 class="text-center">{{ exam.title }}</h1>
+                <!-- Your existing form code here -->
+                <form method="post">
+                    {% csrf_token %}
+                    {% for question in questions %}
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h3 class="card-title">Question {{ forloop.counter }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">{{ question.text }}</p>
+                                <ul class="list-unstyled">
+                                    {% for option in question.options.all %}
+                                        <li>
+                                            <label class="form-check-label">
+                                                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="{{ option.id }}">
+                                                <span class="ms-1">{{ option.text }}</span>
+                                            </label>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <!-- Elements for webcam feed and messages -->
+                <div id="webcam-container" class="mb-4">
+                    <video id="webcam-feed" autoplay playsinline muted width="450" height="450"></video>
+                </div>
+                <div id="message-container">
+                    <p id="multiple-faces-message" style="display: none;">Multiple faces detected! Caution: Only one face allowed.</p>
+                    <p id="deviation-message" style="display: none;">Face deviation detected!</p>
+                </div>
+                <div id="container">
+                    <canvas class="center-block" id="canvasOutput" width=320 height=240></canvas>
+                </div>
+                <div class="invisible">
+                    <video id="video" class="hidden">Your browser does not support the video tag.</video>
+                </div>
+            </div>
+        </div>
+        <div id="alert-container">
+            <!-- Alerts will be displayed here -->
+        </div>
+    </div>
+        
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<!-- Include Bootstrap from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Include OpenCV.js -->
+<script src="https://docs.opencv.org/master/opencv.js"></script>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.5/dat.gui.min.js"></script>
+<script async src="https://huningxin.github.io/opencv.js/build/wasm/opencv.js"></script>
+
+<script>
+    let deviation_detected = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const webcamElement = document.getElementById('webcam-feed');
+        const multipleFacesMessage = document.getElementById('multiple-faces-message');
+        const deviationMessage = document.getElementById('deviation-message');
+        const detectionThreshold = 50;  // Adjust this threshold value
+
+        let video;
+        let cap;
+
+        // Load OpenCV.js and perform initialization
+        const onOpenCvReady = () => {
+            video = document.getElementById('webcam-feed');
+            cap = new cv.VideoCapture(video);
+
+            // Function to start capturing and perform face detection
+            function startCamera() {
+                setInterval(async () => {
+                    let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+                    cap.read(frame);
+
+                    // Convert to grayscale for face detection
+                    let gray = new cv.Mat();
+                    cv.cvtColor(frame, gray, cv.COLOR_RGBA2GRAY);
+                    cv.equalizeHist(gray, gray);
+
+                    // Load the pre-trained face detection classifier
+                    let faceCascade = new cv.CascadeClassifier();
+                    faceCascade.load('https://docs.opencv.org/master/haarcascade_frontalface_default.xml');
+
+                    // Load the pre-trained eye detection classifier
+                    let eyeCascade = new cv.CascadeClassifier();
+                    eyeCascade.load('https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_eye.xml');
+
+                    // Detect faces
+                    let faces = new cv.RectVector();
+                    faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0);
+
+                    // Draw boxes around detected faces
+                    for (let i = 0; i < faces.size(); i++) {
+                        let face = faces.get(i);
+                        let point1 = new cv.Point(face.x, face.y);
+                        let point2 = new cv.Point(face.x + face.width, face.y + face.height);
+                        cv.rectangle(frame, point1, point2, [255, 0, 0, 255], 2);
+
+                        // Eye detection within the face
+                        let eyes = new cv.RectVector();
+                        let faceRoi = gray.roi(face);
+                        eyeCascade.detectMultiScale(faceRoi, eyes);
+                        for (let j = 0; j < eyes.size(); j++) {
+                            let eye = eyes.get(j);
+                            let eyeRect = new cv.Rect(face.x + eye.x, face.y + eye.y, eye.width, eye.height);
+                            cv.rectangle(frame, new cv.Point(eyeRect.x, eyeRect.y), new cv.Point(eyeRect.x + eyeRect.width, eyeRect.y + eyeRect.height), [0, 255, 0, 255], 2);
+                        }
+                        faceRoi.delete();
+                        eyes.delete();
+                    }
+
+                    // Check for multiple faces
+                    if (faces.size() > 1) {
+                        multipleFacesMessage.style.display = 'block';
+                        // Raise an alarm or display a warning
+                        alert('Caution: Multiple faces detected! Only one face allowed.');
+                    } else {
+                        multipleFacesMessage.style.display = 'none';
+                    }
+
+                    // Check for deviations
+                    if (deviation_detected) {
+                        deviationMessage.style.display = 'block';
+                        logFaceDeviation(); // Log face deviation event
+                    } else {
+                        deviationMessage.style.display = 'none';
+                    }
+                    // Release resources
+                    frame.delete();
+                    gray.delete();
+                    faces.delete();
+                    faceCascade.delete();
+                    eyeCascade.delete();
+                }, 100);
+            }
+
+            startCamera();
+
+            // Schedule periodic logging
+            setInterval(function () {
+                logMonitoringData(multipleFacesMessage.style.display === 'block', deviationMessage.style.display === 'block');
+            }, 10000);  // Log data every 10 seconds
+        };
+
+        // Check if OpenCV is loaded
+        if (cv) {
+            onOpenCvReady();
+        } else {
+            console.error('OpenCV.js not loaded');
+        }
+
+        // Load OpenCV.js
+        const script = document.createElement('script');
+        script.src = 'https://docs.opencv.org/master/opencv.js';
+        script.async = true;
+        script.onload = () => {
+            cv.onRuntimeInitialized = onOpenCvReady;
+        };
+        document.head.appendChild(script);
+
+        // Add this code to log data to the server
+        function logMonitoringData(multipleFaceDetected, facialDeviations) {
+            $.ajax({
+                type: 'POST',
+                url: '/log-monitoring-data/',
+                data: {
+                    multipleFaceDetected: multipleFaceDetected,
+                    facialDeviations: facialDeviations,
+                },
+                success: function (data) {
+                    // Log successful data submission if needed
+                    console.log('Monitoring data logged successfully.');
+                },
+                error: function (error) {
+                    // Handle error if data submission fails
+                    console.error('Error logging monitoring data:', error);
+                }
+            });
+        }
+
+        // Add this function to log face deviation event
+        function logFaceDeviation() {
+            $.ajax({
+                type: 'POST',
+                url: '/log-face-deviation/',
+                success: function (data) {
+                    console.log('Face deviation event logged.');
+                },
+                error: function (error) {
+                    console.error('Error logging face deviation event:', error);
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Add this JavaScript code to detect page minimization -->
+<script>
+    function logPageMinimization() {
+        $.ajax({
+            type: 'POST',
+            url: '/log-page-minimization/',
+            success: function (data) {
+                console.log('Page minimization event logged.');
+            },
+            error: function (error) {
+                console.error('Error logging page minimization event:', error);
+            }
+        });
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            // The page is hidden or minimized
+            // You can trigger a warning or flag the session as suspicious here
+            logPageMinimization();
+            showAlert('Page minimized! Please stay on this page.');
+        } else {
+            // The page is visible again
+            // You can handle this event if needed
+        }
+    });
+</script>
+
+<!-- Add JavaScript to detect login/logout and user inactivity (customize as needed) -->
+<script>
+    let inactivityTimer;
+    const inactivityTimeout = 300000;  // 5 minutes in milliseconds (adjust as needed)
+
+    // Placeholder function for server-side user status check
+    function checkUserStatus() {
+        // This function should return user status (e.g., 'authenticated' or 'anonymous')
+        // You can replace this with actual logic based on your authentication system.
+        // For demonstration purposes, it always returns 'authenticated'.
+        return 'authenticated';
+    }
+
+    // Function to display login/logout and inactivity alerts
+    function displayAlert(message) {
+        showAlert(message);
+    }
+
+    // Function to handle user inactivity
+    function handleInactivity() {
+        const userStatus = checkUserStatus();
+
+        // Display inactivity alert only for authenticated users
+        if (userStatus === 'authenticated') {
+            displayAlert('You have been inactive for a while. Please interact to stay connected.');
+        }
+    }
+
+    // Function to reset the inactivity timer
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(handleInactivity, inactivityTimeout);
+    }
+
+    // Event listener for user activity
+    document.addEventListener('mousemove', resetInactivityTimer);
+    document.addEventListener('keypress', resetInactivityTimer);
+
+    // Initial setup for the inactivity timer
+    resetInactivityTimer();
+</script>
+
+<script>
+    // Disable right-click
+    document.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+        showAlert('Right-click is disabled.');
+    });
+
+    // ... (Code for copy and paste events)
+
+    function logCopyEvent() {
+        $.ajax({
+            type: 'POST',
+            url: '/log-copy-event/',
+            data: { event: 'copy' },
+            success: function (data) {
+                // Log successful data submission
+                console.log('Copy event logged successfully.');
+            },
+            error: function (error) {
+                // Handle error if data submission fails
+                console.error('Error logging copy event:', error);
+            }
+        });
+    }
+
+    function logPasteEvent() {
+        $.ajax({
+            type: 'POST',
+            url: '/log-paste-event/',
+            data: { event: 'paste' },
+            success: function (data) {
+                // Log successful data submission
+                console.log('Paste event logged successfully.');
+            },
+            error: function (error) {
+                // Handle error if data submission fails
+                console.error('Error logging paste event:', error);
+            }
+        });
+    }
+</script>
+{% endblock %}
+
+

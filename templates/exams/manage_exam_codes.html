@@ -1,0 +1,50 @@
+<!-- manage_exam_codes.html -->
+
+
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    
+          
+              <div class="mb-2">
+                  <h2 class="text-center">Manage Exam Code</h2>
+              </div>
+             
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Description</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for exam_code in exam_codes %}
+                      <tr>
+                        <td>{{ exam_code.code }}</td>
+                        <td>{{ exam_code.description }}</td>
+                        <td>
+                          <a href="{% url 'edit_exam_code' exam_code.id %}">Edit</a> |
+                          <a href="{% url 'delete_exam_code' exam_code.id %}">Delete</a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+             
+              <div class="mb-2 mt-5">
+                <a href="{% url 'create_exam_code' %}" class="btn btn-primary">Create New Exam Code</a>
+              </div>
+
+  </div>
+</div>
+  
+ 
+{% endblock %}
+
+

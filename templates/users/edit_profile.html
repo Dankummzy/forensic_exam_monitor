@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <!-- Display user's profile information here -->
+            <h2 class="text-center">Edit Your Profile</h2>
+            <!-- Form to edit profile information -->
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="{{ profile_form.first_name.id_for_label }}" class="form-label">First Name:</label>
+                    <input type="text" class="form-control" id="{{ profile_form.first_name.id_for_label }}" name="{{ profile_form.first_name.name }}" value="{{ profile_form.first_name.value }}">
+                </div>
+                <div class="mb-3">
+                    <label for="{{ profile_form.last_name.id_for_label }}" class="form-label">Last Name:</label>
+                    <input type="text" class="form-control" id="{{ profile_form.last_name.id_for_label }}" name="{{ profile_form.last_name.name }}" value="{{ profile_form.last_name.value }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.matriculation_number.id_for_label }}" class="form-label">Matriculation Number:</label>
+                    <input type="text" class="form-control" id="{{ profile_form.matriculation_number.id_for_label }}" name="{{ profile_form.matriculation_number.name }}" value="{{ profile_form.matriculation_number.value }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.level.id_for_label }}" class="form-label">Level:</label>
+                    <input type="text" class="form-control" id="{{ profile_form.level.id_for_label }}" name="{{ profile_form.level.name }}" value="{{ profile_form.level.value }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.faculty.id_for_label }}" class="form-label">Faculty:</label>
+                    <input type="text" class="form-control" id="{{ profile_form.faculty.id_for_label }}" name="{{ profile_form.faculty.name }}" value="{{ profile_form.faculty.value }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.department.id_for_label }}" class="form-label">Department:</label>
+                    <input type="text" class="form-control" id="{{ profile_form.department.id_for_label }}" name="{{ profile_form.department.name }}" value="{{ profile_form.department.value }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ profile_form.profile_picture.id_for_label }}" class="form-label">Profile Picture:</label>
+                    {{ profile_form.profile_picture }}
+                </div>
+                <!-- Repeat this pattern for other form fields -->
+                <button type="submit" class="btn btn-primary  mb-4">Update Profile</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

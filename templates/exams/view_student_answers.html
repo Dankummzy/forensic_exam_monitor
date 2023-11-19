@@ -1,0 +1,36 @@
+<!-- view_student_answers.html -->
+
+
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+  <h1>View Student Answers - {{ exam.title }}</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Question</th>
+        <th>Chosen Option</th>
+        <th>Is Correct?</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for answer in student_answers %}
+        <tr>
+          <td>{{ answer.user.username }}</td>
+          <td>{{ answer.question.text }}</td>
+          <td>{{ answer.chosen_option.text }}</td>
+          <td>{{ answer.is_correct }}</td>
+          <td>{{ answer.score }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+

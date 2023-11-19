@@ -1,0 +1,60 @@
+<!-- monitoring_logs.html -->
+
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Monitoring Logs</h2>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                 
+                    <ul class="list-group list-group-flush">
+                        {% for log in logs %}
+                            <li class="list-group-item">
+                                <strong>{{ log.timestamp }}</strong>:
+                                <br>
+                                {% if log.multiple_face_detected %}
+                                    Multiple faces detected
+                                    <br>
+                                {% endif %}
+                                {% if log.face_deviation %}
+                                    Facial deviation detected
+                                    <br>
+                                {% endif %}
+                                {% if log.page_minimized %}
+                                    Page minimized
+                                    <br>
+                                {% endif %}
+                                {% if log.user_inactivity_detected %}
+                                    User inactivity detected
+                                    <br>
+                                {% endif %}
+                                {% if log.copy_paste_attempt %}
+                                    Copy or paste attempt detected
+                                    <br>
+                                {% endif %}
+                                {% if log.logins %}
+                                    {{ log.logins }} logins
+                                    <br>
+                                {% endif %}
+                                {% if log.logouts %}
+                                    {{ log.logouts }} logouts
+                                    <br>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

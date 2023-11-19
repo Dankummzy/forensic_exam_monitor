@@ -1,0 +1,32 @@
+<!-- create_exam.html -->
+
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+  
+  <div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Create Exam</h2>
+                </div>
+                <div class="card-body">
+                  <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <button type="submit">Create</button>
+                  </form>
+                </div>
+                <div class="card-footer">
+                    <!-- <p class="text-center">Don't have an account? <a href="{% url 'register' %}">Register here</a></p> -->
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+{% endblock %}
+

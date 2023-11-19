@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Face and Eye Detection with OpenCV.js</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+    .invisible {
+      display: none;
+    }
+    .text-center {
+      text-align: center;
+    }
+    div {
+      margin: 10px;
+    }
+    .center-block {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <canvas class="center-block" id="canvasOutput" width=320 height=240></canvas>
+  </div>
+  <div class="invisible">
+    <video id="video" class="hidden">Your browser does not support the video tag.</video>
+  </div>
+
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.5/dat.gui.min.js"></script>
+  <script>
+    var Module = {
+      wasmBinaryFile: 'https://huningxin.github.io/opencv.js/build/wasm/opencv_js.wasm',
+      preRun: [function() {
+        Module.FS_createPreloadedFile('/', 'haarcascade_eye.xml', 'https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_eye.xml', true, false);
+        Module.FS_createPreloadedFile('/', 'haarcascade_frontalface_default.xml', 'https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml', true, false);
+      }],
+      _main: function() { opencvIsReady(); }
+    };
+
+    let videoWidth, videoHeight;
+    let streaming = false;
+    let video = document.getElementById('video');
+    let canvasOutput = document.getElementById('canvasOutput');
+    let canvasOutputCtx = canvasOutput.getContext('2d');
+    let stream = null;
+
+    let srcMat, grayMat, faceClassifier, eyeClassifier;
+    let canvasInput, canvasInputCtx, canvasBuffer, canvasBufferCtx;
+
+    function startCamera() {
+      if (streaming) return;
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(function(s) {
+          stream = s;
+          video.srcObject = s;
+          video.play();
+        })
+        .catch(function(err) {
+          console.log("An error occurred! " + err);
+        });
+
+      video.addEventListener("canplay", function(ev){
+        if (!streaming) {
+          videoWidth = video.videoWidth;
+          videoHeight = video.videoHeight;
+          video.setAttribute("width", videoWidth);
+          video.setAttribute("height", videoHeight);
+          canvasOutput.width = videoWidth;
+          canvasOutput.height = videoHeight;
+          streaming = true;
+        }
+        startVideoProcessing();
+      }, false);
+    }
+
+    function startVideoProcessing() {
+      if (!streaming) { console.warn("Please startup your webcam"); return; }
+      stopVideoProcessing();
+      canvasInput = document.createElement('canvas');
+      canvasInput.width = videoWidth;
+      canvasInput.height = videoHeight;
+      canvasInputCtx = canvasInput.getContext('2d');
+
+      canvasBuffer = document.createElement('canvas');
+      canvasBuffer.width = videoWidth;
+      canvasBuffer.height = videoHeight;
+      canvasBufferCtx = canvasBuffer.getContext('2d');
+
+      srcMat = new cv.Mat(videoHeight, videoWidth, cv.CV_8UC4);
+      grayMat = new cv.Mat(videoHeight, videoWidth, cv.CV_8UC1);
+
+      faceClassifier = new cv.CascadeClassifier();
+      faceClassifier.load('haarcascade_frontalface_default.xml');
+
+      eyeClassifier = new cv.CascadeClassifier();
+      eyeClassifier.load('haarcascade_eye.xml');
+
+      requestAnimationFrame(processVideo);
+    }
+
+    function processVideo() {
+      canvasInputCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
+      let imageData = canvasInputCtx.getImageData(0, 0, videoWidth, videoHeight);
+      srcMat.data.set(imageData.data);
+      cv.cvtColor(srcMat, grayMat, cv.COLOR_RGBA2GRAY);
+      let faces = [];
+      let eyes = [];
+
+      // Face detection
+      let faceVect = new cv.RectVector();
+      faceClassifier.detectMultiScale(grayMat, faceVect, 1.1, 3, 0);
+      for (let i = 0; i < faceVect.size(); i++) {
+        let face = faceVect.get(i);
+        faces.push(new cv.Rect(face.x, face.y, face.width, face.height));
+
+        // Eye detection within the face
+        let eyeVect = new cv.RectVector();
+        let faceRoi = grayMat.roi(face);
+        eyeClassifier.detectMultiScale(faceRoi, eyeVect);
+        for (let j = 0; j < eyeVect.size(); j++) {
+          let eye = eyeVect.get(j);
+          eyes.push(new cv.Rect(face.x + eye.x, face.y + eye.y, eye.width, eye.height));
+        }
+        faceRoi.delete();
+        eyeVect.delete();
+      }
+
+      faceVect.delete();
+
+      canvasOutputCtx.drawImage(canvasInput, 0, 0, videoWidth, videoHeight);
+      drawResults(canvasOutputCtx, faces, 'red');
+      drawResults(canvasOutputCtx, eyes, 'yellow');
+      requestAnimationFrame(processVideo);
+    }
+
+    function drawResults(ctx, results, color) {
+      for (let i = 0; i < results.length; ++i) {
+        let rect = results[i];
+        let xRatio = videoWidth / grayMat.cols;
+        let yRatio = videoHeight / grayMat.rows;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = color;
+        ctx.strokeRect(rect.x * xRatio, rect.y * yRatio, rect.width * xRatio, rect.height * yRatio);
+      }
+    }
+
+    function stopVideoProcessing() {
+      if (srcMat != null && !srcMat.isDeleted()) srcMat.delete();
+    }
+
+    function stopCamera() {
+      if (!streaming) return;
+      stopVideoProcessing();
+      document.getElementById("canvasOutput").getContext("2d").clearRect(0, 0, videoWidth, videoHeight);
+      video.pause();
+      video.srcObject = null;
+      stream.getVideoTracks()[0].stop();
+      streaming = false;
+    }
+
+    function initUI() {
+      startCamera();
+    }
+
+    function opencvIsReady() {
+      initUI();
+    }
+  </script>
+  <script async src="https://huningxin.github.io/opencv.js/build/wasm/opencv.js"></script>
+</body>
+</html>
