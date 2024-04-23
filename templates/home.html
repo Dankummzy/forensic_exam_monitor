@@ -1,0 +1,32 @@
+<!-- base.html -->
+
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="jumbotron bg-light">
+        <h1 class="display-4">Welcome to the Forensic Exam Portal</h1>
+        <p class="lead">Register and take exams online while ensuring academic integrity with our forensic tools.</p>
+        <hr class="my-4">
+        
+        {% if user.is_authenticated %}
+            <div class="text-center">
+                <h3 class="mb-3">Hey, {{ user }}!</h3>
+                <a class="btn btn-primary btn-lg" href="{% url 'profile' %}" role="button">Go to Your Profile</a>
+                {% if user.is_staff %}
+                    <a class="btn btn-success btn-lg" href="{% url 'dashboard' %}" role="button">Go to Admin Dashboard</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="text-center">
+                <p class="mb-3">Get started by creating an account or logging in.</p>
+                <a class="btn btn-primary btn-lg" href="{% url 'register' %}" role="button">Register</a>
+                <a class="btn btn-secondary btn-lg" href="{% url 'login' %}" role="button">Login</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

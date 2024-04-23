@@ -1,0 +1,17 @@
+/* Styling for the video element displaying the webcam feed */
+#webcam-feed {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    border: 2px solid #333;
+}
+
+/* Styling for the deviation alert */
+#deviation-alert {
+    background-color: #f44336; /* Red background color */
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 18px;
+    display: none; /* Hide initially */
+}

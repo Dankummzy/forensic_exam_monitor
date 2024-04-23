@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">{{ user.first_name }}'s Profile</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Personal Information</h3>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>First Name:</strong> {{ user.first_name }}
+                        </li>
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>Last Name:</strong> {{ user.last_name }}
+                        </li>
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>Level:</strong> {{ user.level }}
+                        </li>
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>Year of Study:</strong> {{ user.year_of_study }}
+                        </li>
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>Matriculation Number:</strong> {{ user.matriculation_number }}
+                        </li>
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>Faculty:</strong> {{ user.faculty }}
+                        </li>
+                        <li class="list-group-item" style="text-align: left;">
+                            <strong>Department:</strong> {{ user.department }}
+                        </li>
+                    </ul>
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary mt-3">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Exam Management</h3>
+                    <form method="post" action="{% url 'enter_exam_code' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="exam_code" class="form-label">Enter Exam Code:</label>
+                            <input type="text" class="form-control" id="exam_code" name="code">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Take Exam</button>
+                    </form>
+                    <!-- Additional exam management functionalities here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

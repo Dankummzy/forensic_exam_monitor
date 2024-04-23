@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Monitoring Logs</h1>
+
+    <!-- Proctoring Logs Section -->
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <h2>Proctoring Logs</h2>
+            <div class="list-group">
+                {% for log in proctoring_logs %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ log.date_created }}</h5>
+                            <small>{{ log.exam.title }}</small>
+                        </div>
+                        {% if log.image_data %}
+                            <p class="mb-1">Image Data: {{ log.img_data.url }}</p>
+                        {% endif %}
+                        {% if log.img_log %}
+                            <p class="mb-1">Image Data: {{ log.img_log }}</p>
+                        {% endif %}
+                        {% if log.voice_db %}
+                            <p class="mb-1">Voice Data: {{ log.voice_db }}</p>
+                        {% endif %}
+                        <p class="mb-1">User Movements Up-Down: {{ log.user_movements_updown }}</p>
+                        <p class="mb-1">User Movements Left-Right: {{ log.user_movements_lr }}</p>
+                        <p class="mb-1">User Movements Eyes: {{ log.user_movements_eyes }}</p>
+                        <p class="mb-1">Phone Detection: {{ log.phone_detection }}</p>
+                        <p class="mb-1">Person Status: {{ log.person_status }}</p>
+                        <!-- Display other relevant fields from ProctoringLog model -->
+                    </a>
+                {% empty %}
+                    <p>No proctoring logs available</p>
+                {% endfor %}
+                {% if proctoring_logs.has_other_pages %}
+                    <ul class="pagination justify-content-center mt-3">
+                        {% if proctoring_logs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?proctoring_page={{ proctoring_logs.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        {% for num in proctoring_logs.paginator.page_range %}
+                            <li class="page-item {% if num == proctoring_logs.number %}active{% endif %}">
+                                <a class="page-link" href="?proctoring_page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if proctoring_logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?proctoring_page={{ proctoring_logs.next_page_number }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    
+        <!-- Event Logs Section -->
+        <div class="col-md-6">
+            <h2>Event Logs</h2>
+            <div class="list-group">
+                {% for log in event_logs %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ log.timestamp }}</h5>
+                            <small>{{ log.exam.title }}</small>
+                        </div>
+                        <p class="mb-1">{{ log.event_type }}</p>
+                        <!-- Display other relevant fields from EventLog model -->
+                    </a>
+                {% empty %}
+                    <p>No event logs available</p>
+                {% endfor %}
+                {% if event_logs.has_other_pages %}
+                    <ul class="pagination justify-content-center mt-3">
+                        {% if event_logs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?event_page={{ event_logs.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        {% for num in event_logs.paginator.page_range %}
+                            <li class="page-item {% if num == event_logs.number %}active{% endif %}">
+                                <a class="page-link" href="?event_page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if event_logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?event_page={{ event_logs.next_page_number }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

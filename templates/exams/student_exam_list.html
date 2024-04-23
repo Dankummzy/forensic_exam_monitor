@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Available Exams</h1>
+    <ul class="list-group">
+        {% for exam in exams %}
+            <li class="list-group-item">
+                <a href="{% url 'exam_detail' exam.id %}">{{ exam.title }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

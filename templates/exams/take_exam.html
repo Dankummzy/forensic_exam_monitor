@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div id="copy-alert" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+    Copying of content is not allowed.
+    <button type="button" class="btn-close" id="dismiss-copy-alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+      <div class="container">
+        <h1 class="text-center">{{ exam.title }}</h1>
+        <form id="exam-form" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% for question in questions %}
+            <div class="card mb-3">
+              <div class="card-header">
+                <h3 class="card-title">Question {{ forloop.counter }}</h3>
+              </div>
+              <div class="card-body">
+                <p class="card-text">{{ question.text }}</p>
+                <ul class="list-unstyled">
+                  {% for option in question.options.all %}
+                    <li>
+                      <label class="form-check-label">
+                        <input
+                          type="radio"
+                          class="form-check-input"
+                          name="question_{{ question.id }}"
+                          value="{{ option.id }}"
+                        />
+                        <span class="ms-1">{{ option.text }}</span>
+                      </label>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          {% endfor %}
+          <button type="submit">Submit Exam</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+  $(document).ready(function() {
+    // Function to get CSRF token from cookies
+    function getCSRFToken() {
+        const csrfToken = document.cookie.match(/csrftoken=([^ ;]+)/)[1];
+        return csrfToken;
+    }
+
+    // Function to track events
+    function trackEvent(eventType, eventData) {
+        $.ajax({
+            url: "{% url 'track_event' exam_id=exam.id %}",  // Using Django's URL template tag
+            type: 'POST',
+            headers: {
+                "X-CSRFToken": getCSRFToken()  // Include CSRF token in request headers
+            },
+            data: {
+                event_type: eventType,
+                event_data: JSON.stringify(eventData)
+            },
+            success: function(response) {
+                console.log('Event tracked successfully:', response);
+                console.log('Event Data Received:', eventData);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error tracking event:', error);
+            }
+        });
+    }
+
+    // Track copy and paste events
+    $(document).on('copy paste', function(event) {
+        trackEvent(event.type, { timestamp: new Date().toISOString() });
+        $('#copy-alert').show();  // Show the alert
+        event.preventDefault();  // Prevent default copy behavior
+    });
+
+    // Dismiss copy alert when the button is clicked
+    $('#dismiss-copy-alert').on('click', function() {
+        $('#copy-alert').hide();  // Hide the alert
+    });
+
+    // Track page minimization
+    $(window).blur(function() {
+        trackEvent("page_minimization", { timestamp: new Date().toISOString() });
+        alert("Page minimization is not allowed.");
+    });
+
+    // Track mouse tracking
+    $(document).mousemove(function(event) {
+        trackEvent("mouse_tracking", {
+            x_position: event.pageX,
+            y_position: event.pageY
+        });
+    });
+});
+
+  </script>
+{% endblock %}

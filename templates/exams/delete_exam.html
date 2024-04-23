@@ -1,0 +1,17 @@
+<!-- delete_exam.html -->
+
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+  <h1>Delete Exam</h1>
+  <p>Are you sure you want to delete "{{ exam.title }}" exam?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Delete</button>
+  </form>
+  <a href="{% url 'exam_list' %}">Back to Exam List</a>
+{% endblock %}
+

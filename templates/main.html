@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+</head>
+
+<body>
+
+  <main>
+    <section>
+      <div>
+        <div>
+          <div>
+            <h1>Create an Account</h1>
+          </div>
+          <img src="personal_information.png" alt="Personal Information Image">
+          <div>
+            <form action="" method="POST">
+              <div>
+                <label for="email">Email</label>
+                <div>
+                  <input name="email" type="email" id="email" placeholder="example@company.com" required>
+                </div>
+              </div>
+              <div>
+                <label for="name">Name</label>
+                <div>
+                  <input name="name" type="text" id="name" placeholder="John Doe" required>
+                </div>
+              </div>
+              <div>
+                <label for="password">Password</label>
+                <div>
+                  <input name="password" type="password" id="password" placeholder="Password" required>
+                </div>
+              </div>
+              <div>
+                <label for="userType">Choose User Type</label>
+                <div>
+                  <select id="userType" name="user_type" required>
+                    <option value="student">Student</option>
+                    <option value="teacher">Professor</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <video id="stream" width="370" height="320"></video>
+                <br>
+                <button id="btn-capture" type="button">Capture Image</button>
+                <br><br>
+                <div id="snapshot"></div>
+                <input type="hidden" id="image_hidden" name="image_hidden">
+              </div>
+              <input type="submit" value="Register">
+            </form>
+            <p>Already have an account? <a href="/login">Click here</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    var btnCapture = document.getElementById("btn-capture");
+    var stream = document.getElementById("stream");
+    var snapshot = document.getElementById("snapshot");
+    var cameraStream = null;
+
+    btnCapture.addEventListener("click", captureSnapshot);
+
+    function startStreaming() {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (mediaStream) {
+          cameraStream = mediaStream;
+          stream.srcObject = mediaStream;
+          stream.play();
+        })
+        .catch(function (err) {
+          console.log("Unable to access camera: " + err);
+        });
+    }
+
+    function captureSnapshot() {
+      if (null != cameraStream) {
+        var ctx = document.createElement("canvas").getContext('2d');
+        ctx.canvas.width = stream.width;
+        ctx.canvas.height = stream.height;
+        ctx.drawImage(stream, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        var img = new Image();
+        img.src = ctx.canvas.toDataURL("image/png");
+        img.width = 370;
+        img.height = 320;
+        snapshot.innerHTML = '';
+        snapshot.appendChild(img);
+        var dataURL = img.src.replace(/^data:image\/(png|jpg);base64,/, "");
+        document.getElementById("image_hidden").value = dataURL;
+      }
+    }
+
+    window.onload = function () {
+      startStreaming();
+      captureSnapshot();
+    };
+  </script>
+
+</body>
+
+</html>

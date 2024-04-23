@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <div class="row">
+
+        <main class="col-md-12 ms-sm-auto col-lg-12 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2 class="h2" style="text-align:center;">Welcome, {{ user }}!</h2>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <!-- Add additional buttons or toolbar elements here -->
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- Admin functionalities - Exam Management -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h3 class="card-title">Exam Management</h3>
+                                    <div class="mb-3">
+                                        <a href="{% url 'create_exam' %}" class="btn btn-success btn-block">Create Exam</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h3 class="card-title">Exam Code Management</h3>
+                                    <div class="mb-3">
+                                        <a href="{% url 'manage_exam_codes' %}" class="btn btn-info btn-block">Manage Exam Codes</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h3 class="card-title">Student Exam List</h3>
+                                    <div class="mb-3">
+                                        <a href="{% url 'student_exam_list' %}" class="btn btn-secondary btn-block">See Available Exams</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h3 class="card-title">View Monitoring Logs</h3>
+                                    <div class="mb-3">
+                                        <a href="{% url 'user_exam_list' %}" class="btn btn-warning btn-block">View Monitoring Logs</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if exams %}
+                        {% with first_exam=exams.0 %}
+                            {% with first_user=first_exam.user %}
+                                <div class="card bg-light mb-4">
+                                    <div class="card-body">
+                                        <h3 class="card-title">Monitor Exam</h3>
+                                        <div class="mb-3">
+                                            <a href="{% url 'monitor_exam' exam_id=first_exam.id user_id=first_user.id %}" class="btn btn-primary btn-block">Monitor Exam</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endwith %}
+                        {% endwith %}
+                    {% else %}
+                        <p>No exams available</p>
+                    {% endif %}
+                </div>
+                <!-- Add more sections or cards as needed -->
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

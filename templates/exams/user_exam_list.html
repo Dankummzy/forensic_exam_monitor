@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Monitoring Logs</h1>
+
+    <div class="list-group mt-5">
+        {% for user_exam in user_exam_list %}            
+            {% if user_exam.student and user_exam.exam %}
+                <a href="{% url 'monitoring_logs' user_exam.student user_exam.exam %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ user_exam.student_username }}</h5>
+                        <small>{{ user_exam.exam_title }}</small>
+                    </div>
+                </a>
+            {% endif %}
+        {% empty %}
+            <p>No user-exam combinations available</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

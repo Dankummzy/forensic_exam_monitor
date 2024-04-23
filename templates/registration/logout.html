@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2>Logout</h2>
+    <p>You have been logged out.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">Login again</a>
+  </div>
+{% endblock %}
